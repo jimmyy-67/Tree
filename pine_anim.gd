@@ -36,6 +36,7 @@ var _origen := Vector2.ZERO
 
 
 func _ready() -> void:
+	get_window().title = "Tree?"
 	_aleatorio.randomize()
 	_viento.duracion = mezcla
 	_terminal.load_font()
