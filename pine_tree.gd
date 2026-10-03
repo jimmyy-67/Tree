@@ -1,4 +1,6 @@
 class_name PineTree
+
+
 extends RefCounted
 
 const altura := 1.0
@@ -18,15 +20,17 @@ const densidad := Vector2i(7, 13)
 const largo := Vector2(0.008, 0.026)
 const escalonado := 0.85
 
-const amplitud := 0.34
-const matas := 110
-const cima := 0.030
+const amplitud := 0.38
+const matas := 260
+const cima := 0.15
 
 var tronco := PackedVector2Array()
 var ramas: Array[PineBranch] = []
 var deriva := PackedFloat32Array()
 var colina := PackedFloat32Array()
 var fase := PackedFloat32Array()
+var curva := PackedFloat32Array()
+var dureza := PackedFloat32Array()
 
 var _azar := RandomNumberGenerator.new()
 
@@ -35,7 +39,7 @@ func grow(rng: RandomNumberGenerator, sine_table_size: int) -> void:
 	_azar = rng
 	_grow_trunk()
 	_grow_branches(sine_table_size)
-	_grow_ground()
+	_grow_ground(sine_table_size)
 
 
 func needle_count() -> int:
@@ -147,15 +151,18 @@ func _mirror(branch: PineBranch) -> void:
 		branch.desplazamientos[i] = Vector2(-branch.desplazamientos[i].x, branch.desplazamientos[i].y)
 
 
-func _grow_ground() -> void:
+func _grow_ground(sine_table_size: int) -> void:
 	deriva.resize(matas)
 	colina.resize(matas)
 	fase.resize(matas)
+	curva.resize(matas)
+	dureza.resize(matas)
 	for i in range(matas):
 		var sign_x := 1.0 if _azar.randf() < 0.5 else -1.0
-		var spread := pow(_azar.randf(), 0.6) * amplitud * sign_x
+		var spread := pow(_azar.randf(), 0.55) * amplitud * sign_x
+		var centro := 1.0 - absf(spread) / amplitud
 		deriva[i] = spread
-		colina[i] = _azar.randf_range(0.25, 1.0) * cima * (
-			1.0 - absf(spread) / amplitud
-		)
-		fase[i] = _azar.randf() * TAU
+		colina[i] = _azar.randf_range(0.30, 1.0) * cima * (0.40 + 0.60 * centro)
+		fase[i] = _azar.randi() % sine_table_size
+		curva[i] = _azar.randf_range(-0.30, 0.30) * colina[i]
+		dureza[i] = _azar.randf_range(0.70, 1.35)

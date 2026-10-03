@@ -1,4 +1,6 @@
 class_name PineWind
+
+
 extends RefCounted
 
 var fase := 0.0
@@ -15,7 +17,6 @@ var achatado := PackedFloat32Array()
 var previo := 0
 var proximo := 0
 var amplitud := 0.0
-var inclinacion := 0.0
 
 var _tabla := PackedFloat32Array()
 
@@ -62,13 +63,23 @@ func solve(tree: PineTree) -> void:
 	_solve_flutter()
 
 
+func viento(alto: float) -> float:
+	return _bend(alto)
+
+
+func titileo(fase: int) -> float:
+	var a := sin_at(proximo + fase)
+	if not is_blending():
+		return a
+	return lerpf(sin_at(previo + fase), a, weight())
+
+
 func _solve_trunk(tree: PineTree) -> void:
 	var top := float(maxi(tree.tronco.size() - 1, 1))
 	torcido.resize(tree.tronco.size())
 	for i in range(tree.tronco.size()):
 		var height := float(i) / top
 		torcido[i] = tree.tronco[i] + Vector2(_bend(height) * height * height, 0.0)
-	inclinacion = _bend(0.0) * 14.0
 
 
 func _solve_branches(tree: PineTree) -> void:

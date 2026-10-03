@@ -1,4 +1,6 @@
 class_name PineChrome
+
+
 extends RefCounted
 
 const avance := 0.62
@@ -107,10 +109,10 @@ func draw_status(canvas: CanvasItem, primary: String, secondary: String, hints: 
 
 func draw_debug(canvas: CanvasItem, lines: PackedStringArray) -> void:
 	var h := half()
-	var box_size := Vector2(
-		text_width(lines[1]) + cuerpo,
-		lines.size() * cuerpo * 1.25 + cuerpo
-	)
+	var ancho := 0.0
+	for line in lines:
+		ancho = maxf(ancho, text_width(line))
+	var box_size := Vector2(ancho + cuerpo, lines.size() * cuerpo * 1.25 + cuerpo)
 	var box := Rect2(
 		Vector2(h.x - box_size.x - cuerpo * 0.4, -h.y + cuerpo * 0.4), box_size
 	)

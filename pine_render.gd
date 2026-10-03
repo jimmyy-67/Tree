@@ -1,4 +1,6 @@
 class_name PineRender
+
+
 extends RefCounted
 
 const pasos := 32
@@ -11,6 +13,7 @@ const pie := 0.020
 const copa := 0.0016
 const tono := Vector2(0.55, 1.0)
 const sombra := 0.72
+const GRASS_SEGMENTS := 4
 
 var paleta := PackedColorArray()
 
@@ -41,8 +44,8 @@ func configure(tree: PineTree) -> void:
 	_colores.resize(needles)
 	_lineas.resize(tree.segment_count() * 2)
 	_lineas_tintes.resize(tree.segment_count())
-	_suelo_puntas.resize(PineTree.matas * 2)
-	_suelo_tintes.resize(PineTree.matas)
+	_suelo_puntas.resize(PineTree.matas * GRASS_SEGMENTS * 2)
+	_suelo_tintes.resize(PineTree.matas * GRASS_SEGMENTS)
 	_losa.resize(4)
 	_losa_tintes.resize(4)
 
@@ -155,18 +158,24 @@ func _branch_point(
 
 
 func _build_ground(tree: PineTree, wind: PineWind, origin: Vector2, unit: float) -> void:
-	var lean := wind.inclinacion
-	var claro := paleta[11]
+	var base_shade := shade(0.22)
+	var tip_shade := shade(0.62)
+	var write := 0
 	for i in range(PineTree.matas):
-		var wobble := sin(TAU * wind.fase + tree.fase[i])
-		# Tree units all the way in; _plot does the single scaling by unit.
+		var alto := tree.colina[i]
+		var lean := (wind.viento(alto / PineTree.altura) + tree.curva[i]) * tree.dureza[i]
+		lean += wind.titileo(int(tree.fase[i])) * wind.amplitud * alto * 0.9 * tree.dureza[i]
 		var x := tree.deriva[i]
-		var h := tree.colina[i] * (1.0 + wobble * 0.22)
-		_suelo_puntas[i * 2] = _plot(Vector2(x, 0.0), origin, unit)
-		_suelo_puntas[i * 2 + 1] = _plot(
-			Vector2(x + lean * 0.05 + h * 0.3, h), origin, unit
-		)
-		_suelo_tintes[i] = claro
+
+		var previous := _plot(Vector2(x, 0.0), origin, unit)
+		for s in range(1, GRASS_SEGMENTS + 1):
+			var t := float(s) / float(GRASS_SEGMENTS)
+			var point := _plot(Vector2(x + lean * t * t, alto * t), origin, unit)
+			_suelo_puntas[write] = previous
+			_suelo_puntas[write + 1] = point
+			_suelo_tintes[write >> 1] = base_shade.lerp(tip_shade, t)
+			write += 2
+			previous = point
 
 
 func _draw_trunk(canvas: CanvasItem, wind: PineWind, origin: Vector2, unit: float) -> void:
